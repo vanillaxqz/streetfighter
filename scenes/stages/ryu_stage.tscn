@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://j1hunvdgktd"]
+
+[ext_resource type="Texture2D" uid="uid://d0yax8agb87hl" path="res://assets/stages/ryu_stage.png" id="1_um7dn"]
+
+[node name="Stage" type="Node2D"]
+
+[node name="background" type="Sprite2D" parent="."]
+position = Vector2(589.667, 454.625)
+scale = Vector2(1.75521, 2.69271)
+texture = ExtResource("1_um7dn")

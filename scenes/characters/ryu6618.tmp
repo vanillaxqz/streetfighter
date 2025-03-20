@@ -1,4 +1,4 @@
-[gd_scene load_steps=171 format=3 uid="uid://c3f2njurxool5"]
+[gd_scene load_steps=169 format=3 uid="uid://c3f2njurxool5"]
 
 [ext_resource type="Texture2D" uid="uid://brtf08xtja0sh" path="res://assets/characters/ryu_sprite_sheet.png" id="1_o2jiy"]
 [ext_resource type="Script" path="res://scenes/characters/ryu.gd" id="1_ya58y"]
@@ -267,13 +267,21 @@ region = Rect2(1800, 300, 150, 150)
 atlas = ExtResource("1_o2jiy")
 region = Rect2(1950, 300, 150, 150)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_ypc6t"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_q7wk3"]
 atlas = ExtResource("1_o2jiy")
-region = Rect2(450, 1200, 150, 150)
+region = Rect2(0, 1200, 150, 150)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_0bhv3"]
 atlas = ExtResource("1_o2jiy")
 region = Rect2(150, 1200, 150, 150)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yx8qe"]
+atlas = ExtResource("1_o2jiy")
+region = Rect2(300, 1200, 150, 150)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ypc6t"]
+atlas = ExtResource("1_o2jiy")
+region = Rect2(450, 1200, 150, 150)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hvbpq"]
 atlas = ExtResource("1_o2jiy")
@@ -938,10 +946,16 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_ypc6t")
+"texture": SubResource("AtlasTexture_q7wk3")
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_0bhv3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yx8qe")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ypc6t")
 }],
 "loop": false,
 "name": &"jump_hit",
@@ -1421,76 +1435,13 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_svofb"]
 size = Vector2(60, 93)
 
-[sub_resource type="Animation" id="Animation_p1hap"]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("attackhitbox:position")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector2(0, 0)]
-}
-
-[sub_resource type="Animation" id="Animation_kevii"]
-resource_name = "stand_punch_1_hitbox"
-length = 0.25
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("attackhitbox:position")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.1, 0.2, 0.233333),
-"transitions": PackedFloat32Array(1, 1, 1, 1),
-"update": 1,
-"values": [Vector2(0, 0), Vector2(51.835, 1.455), Vector2(51.835, 1.455), Vector2(0, 0)]
-}
-
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_fhre6"]
-_data = {
-"RESET": SubResource("Animation_p1hap"),
-"stand_punch_1_hitbox": SubResource("Animation_kevii")
-}
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_dix5e"]
-
 [node name="ryu" type="CharacterBody2D"]
 script = ExtResource("1_ya58y")
 
 [node name="animator" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_fiwtv")
-animation = &"jump_hit"
-frame_progress = 1.0
+animation = &"jump_forward"
 
 [node name="collision" type="CollisionShape2D" parent="."]
 position = Vector2(0, 26.5)
 shape = SubResource("RectangleShape2D_svofb")
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-libraries = {
-"": SubResource("AnimationLibrary_fhre6")
-}
-
-[node name="attackhitbox" type="Area2D" parent="." groups=["attack_hitboxes"]]
-collision_layer = 4
-collision_mask = 2
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="attackhitbox"]
-shape = SubResource("RectangleShape2D_dix5e")
-debug_color = Color(0.992593, 0, 0.249853, 0.42)
-
-[node name="hurtbox" type="Area2D" parent="."]
-collision_layer = 2
-collision_mask = 4
-
-[node name="collision" type="CollisionShape2D" parent="hurtbox"]
-position = Vector2(0, 26)
-shape = SubResource("RectangleShape2D_svofb")
-
-[connection signal="area_entered" from="hurtbox" to="." method="_on_Hurtbox_area_entered"]

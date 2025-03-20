@@ -1,10 +1,63 @@
-[gd_scene load_steps=2 format=3 uid="uid://j1hunvdgktd"]
+[gd_scene load_steps=7 format=3 uid="uid://j1hunvdgktd"]
 
+[ext_resource type="PackedScene" uid="uid://ljc4hmyxkhsv" path="res://scenes/hud/HUD.tscn" id="1_snkr2"]
 [ext_resource type="Texture2D" uid="uid://d0yax8agb87hl" path="res://assets/stages/ryu_stage.png" id="1_um7dn"]
+[ext_resource type="PackedScene" uid="uid://c3f2njurxool5" path="res://scenes/characters/ryu.tscn" id="2_yd40u"]
+[ext_resource type="AudioStream" uid="uid://m5yt5kfskgsj" path="res://assets/audio/stage_enter.mp3" id="4_81v6a"]
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_bniej"]
+b = Vector2(1, 648)
+
+[sub_resource type="SegmentShape2D" id="SegmentShape2D_phojj"]
+a = Vector2(-584, 2)
+b = Vector2(568, -1)
 
 [node name="Stage" type="Node2D"]
+metadata/_edit_vertical_guides_ = [590.0]
+metadata/_edit_horizontal_guides_ = [328.0]
 
-[node name="background" type="Sprite2D" parent="."]
+[node name="BG" type="Sprite2D" parent="."]
 position = Vector2(589.667, 454.625)
 scale = Vector2(1.75521, 2.69271)
 texture = ExtResource("1_um7dn")
+
+[node name="Left Wall" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Left Wall"]
+shape = SubResource("SegmentShape2D_bniej")
+
+[node name="Right Wall" type="StaticBody2D" parent="."]
+position = Vector2(1152, 0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Right Wall"]
+shape = SubResource("SegmentShape2D_bniej")
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(586, 565)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor"]
+shape = SubResource("SegmentShape2D_phojj")
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("4_81v6a")
+autoplay = true
+
+[node name="Player1" type="Node2D" parent="."]
+
+[node name="ryu" parent="Player1" instance=ExtResource("2_yd40u")]
+position = Vector2(441, 462)
+scale = Vector2(1.4, 1.4)
+
+[node name="Player2" type="Node2D" parent="."]
+visible = false
+position = Vector2(283.025, 0)
+
+[node name="ryu2" parent="Player2" instance=ExtResource("2_yd40u")]
+position = Vector2(441, 462)
+scale = Vector2(1.4, 1.4)
+
+[node name="HUD" parent="." instance=ExtResource("1_snkr2")]
+position = Vector2(555, 20)
+scale = Vector2(2, 1.25)
+player_path = NodePath("../Player1/ryu")
+player_path_p2 = NodePath("../Player2/ryu2")

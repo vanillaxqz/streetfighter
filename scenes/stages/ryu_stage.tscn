@@ -40,21 +40,21 @@ shape = SubResource("SegmentShape2D_phojj")
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("4_81v6a")
+volume_db = -80.0
 autoplay = true
 
 [node name="Player1" type="Node2D" parent="."]
 
 [node name="ryu" parent="Player1" instance=ExtResource("2_yd40u")]
-position = Vector2(441, 462)
-scale = Vector2(1.4, 1.4)
+position = Vector2(440, 413)
+scale = Vector2(2.075, 2.075)
 
 [node name="Player2" type="Node2D" parent="."]
-visible = false
 position = Vector2(283.025, 0)
 
 [node name="ryu2" parent="Player2" instance=ExtResource("2_yd40u")]
-position = Vector2(441, 462)
-scale = Vector2(1.4, 1.4)
+position = Vector2(453.975, 411)
+scale = Vector2(2.075, 2.075)
 
 [node name="HUD" parent="." instance=ExtResource("1_snkr2")]
 position = Vector2(555, 20)

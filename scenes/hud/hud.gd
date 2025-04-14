@@ -24,7 +24,7 @@ var digit_textures = [
 	preload("res://assets/hud/9.png")
 ]
 
-var round_time = 99
+var round_time = 60
 
 func update_timer_display():
 	var tens_digit = int(round_time / 10)
@@ -36,7 +36,32 @@ func update_timer_display():
 
 func _on_timer_timeout() -> void:
 	if round_time > 0:
+		var p1_hp = $Player1HP/ProgressBar.value
+		var p2_hp = $Player2HP/ProgressBar.value
+		
+		if p1_hp == 0:
+			$ResultLabel.text = "Player 2 won"
+			await get_tree().create_timer(3.0).timeout
+			get_tree().quit()
+		if p2_hp == 0:
+			$ResultLabel.text = "Player 1 won"
+			await get_tree().create_timer(3.0).timeout
+			get_tree().reload_current_scene()
+		
 		round_time -= 1
 		update_timer_display()
 	else:
-		get_tree().quit()
+		var p1_hp = $Player1HP/ProgressBar.value
+		var p2_hp = $Player2HP/ProgressBar.value
+
+		if p1_hp == p2_hp:
+			print("Draw")
+			$ResultLabel.text = "Draw"
+		elif p1_hp > p2_hp:
+			print("Player 1 won")
+			$ResultLabel.text = "Player 1 won"
+		else:
+			print("Player 2 won")
+			$ResultLabel.text = "Player 2 won"
+		await get_tree().create_timer(3.0).timeout
+		get_tree().reload_current_scene()

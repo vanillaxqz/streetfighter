@@ -42,4 +42,12 @@ value = 100.0
 script = ExtResource("3_5a84v")
 metadata/_edit_use_anchors_ = true
 
+[node name="ResultLabel" type="Label" parent="."]
+offset_left = -46.0
+offset_top = 200.0
+offset_right = -45.0
+offset_bottom = 223.0
+horizontal_alignment = 1
+vertical_alignment = 2
+
 [connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

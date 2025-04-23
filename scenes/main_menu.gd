@@ -15,7 +15,7 @@ func _on_playervsplayer_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/stages/ryu_stage.tscn")
 
 func _on_playervsai_pressed() -> void:
-	print("Player vs AI pressed")
+	get_tree().change_scene_to_file("res://scenes/stages/ryuai_stage.tscn")
 
 func _on_exit_pressed() -> void:
 	get_tree().quit()

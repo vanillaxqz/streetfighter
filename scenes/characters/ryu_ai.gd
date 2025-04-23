@@ -16,9 +16,12 @@ var current_state: State = State.IDLE
 signal HPLoss
 
 var hurt_applied = false
-var is_blocking: bool = false
 
-# Input actions (player 1 defaults)
+var is_blocking: bool = false
+var ai_timer = 0.0
+var ai_action_interval = 0.5 + randf() * 1.0  # act every ~1–2s
+var target_body: CharacterBody2D = null
+
 var left_input = "walk_left"
 var right_input = "walk_right"
 var crouch_input = "crouch"
@@ -31,6 +34,7 @@ var kick_2_input = "kick_2"
 var kick_3_input = "kick_3"
 
 var is_player2: bool = false
+
 @onready var projectile = $projectile
 
 func fire_projectile() -> void:
@@ -51,8 +55,9 @@ func set_state(new_state: State) -> void:
 			hurtbox.position = Vector2(hurtbox.position.x, -35)
 			hurtbox.scale = Vector2(hurtbox.scale.x, 0.755)
 
+var p1_node = null
+
 func _ready() -> void:
-	# Detect player 2 and switch inputs
 	if get_parent() and get_parent().name == "Player2":
 		is_player2 = true
 		left_input = "walk_left_p2"
@@ -65,77 +70,100 @@ func _ready() -> void:
 		kick_1_input = "kick_1p2"
 		kick_2_input = "kick_2p2"
 		kick_3_input = "kick_3p2"
-		# Mirror sprite for AI
 		self.scale.x = -abs(self.scale.x)
-		# Seed RNG for AI randomness
-		randomize()
-
+	
 	animator.animation = "idle"
 	animator.play()
+	
 	animator.animation_finished.connect(_on_animation_finished)
+	
 	current_health = max_health
+	
+	if is_player2:
+		var p1_node = get_tree().get_root().get_node("Stage/Player1/ryu")
+		if p1_node:
+			target_body = p1_node
+		else:
+			print("not found")
 
 func _physics_process(delta: float) -> void:
-	# Apply gravity
-	if not is_on_floor():
-		velocity.y += GRAVITY * delta
-
 	if is_player2:
-		# AI-controlled behavior
 		process_ai(delta)
 	else:
-		# Player-controlled behavior
+		# your existing input-driven match…
+		if not is_on_floor():
+			velocity.y += GRAVITY * delta
 		match current_state:
-			State.IDLE:
-				process_idle(delta)
-			State.WALK:
-				process_walk(delta)
-			State.CROUCH:
-				process_crouch(delta)
-			State.JUMP:
-				process_jump(delta)
-			State.ATTACK:
-				pass
-			State.HURT:
-				process_hurt(delta)
+			State.IDLE:   process_idle(delta)
+			State.WALK:   process_walk(delta)
+			State.CROUCH: process_crouch(delta)
+			State.JUMP:   process_jump(delta)
+			State.HURT:   process_hurt(delta)
+		move_and_slide()
+		_flip_based_on_opponent()
+		return  # skip the rest
 
+	if not is_on_floor():
+		velocity.y += GRAVITY * delta
 	move_and_slide()
-	# Always face opponent
 	_flip_based_on_opponent()
 
-# --- AI logic for Player 2 ---
 func process_ai(delta: float) -> void:
-	var root = get_parent().get_parent()
-	if not root.has_node("Player1/CharacterBody2D"):
+	if target_body == null:
 		return
-	var other_body = root.get_node("Player1/CharacterBody2D") as CharacterBody2D
 
-	var dist = other_body.global_position.x - global_position.x
-	var dir = sign(dist)
+	ai_timer += delta
+	if ai_timer < ai_action_interval:
+		if current_state == State.WALK:
+			move_toward_target(delta)
+		return
+	ai_timer = 0.0
+	ai_action_interval = 1.0 + randf() * 1.5
 
-	if abs(dist) > 500:
+	var dist = target_body.global_position.x - global_position.x
+	var absd = abs(dist)
+
+	if absd > 500:
 		set_state(State.WALK)
-		velocity.x = dir * SPEED
-		animator.animation = "walk_forward" if dir > 0 else "walk_backward"
+		velocity.x = sign(dist) * SPEED
+		animator.animation = "walk_forward" if (sign(dist) > 0) else "walk_backward"
 		animator.play()
-
-	elif current_state != State.ATTACK and randf() < 0.02:
-		var attacks = ["stand_punch_1", "stand_punch_2", "stand_kick_1"]
-		var anim = attacks[randi() % attacks.size()]
+	elif absd < 200:
+		var attack_anim = ["stand_punch_1","stand_punch_2","stand_kick_1","stand_kick_2"].pick_random()
 		set_state(State.ATTACK)
-		animator.animation = anim
+		velocity.x = 0
+		animator.animation = attack_anim
 		animator.play()
-		hitbox_anim_player.play(anim + "_hitbox")
+		hitbox_anim_player.play(attack_anim + "_hitbox")
 		await animator.animation_finished
-		# Return to idle
 		set_state(State.IDLE)
 		animator.animation = "idle"
 		animator.play()
-
 	else:
-		set_state(State.IDLE)
-		velocity.x = move_toward(velocity.x, 0, SPEED)
+		if randi() % 3 == 0:
+			# fire projectile
+			set_state(State.ATTACK)
+			animator.animation = "hadouken"
+			animator.play()
+			await animator.animation_finished
+			fire_projectile()
+			set_state(State.IDLE)
+			animator.animation = "idle"
+			animator.play()
+		else:
+			# just walk forward
+			set_state(State.WALK)
+			velocity.x = sign(dist) * SPEED
+			animator.animation = "walk_forward"
+			animator.play()
 
+	if not is_player2:
+		_flip_based_on_opponent()
+
+func move_toward_target(delta):
+	var dir = sign(target_body.global_position.x - global_position.x)
+	velocity.x = dir * SPEED
+	
 func process_idle(delta: float) -> void:
 	var direction = Input.get_axis(left_input, right_input)
 
@@ -154,9 +182,15 @@ func process_idle(delta: float) -> void:
 		set_state(State.WALK)
 		velocity.x = direction * SPEED
 		if is_player2:
-			animator.animation = "walk_backward" if direction > 0 else "walk_forward"
+			if direction > 0:
+				animator.animation = "walk_backward"
+			else:
+				animator.animation = "walk_forward"
 		else:
-			animator.animation = "walk_forward" if direction > 0 else "walk_backward"
+			if direction > 0:
+				animator.animation = "walk_forward"
+			else:
+				animator.animation = "walk_backward"
 		animator.play()
 		return
 
@@ -166,8 +200,16 @@ func process_idle(delta: float) -> void:
 		set_state(State.ATTACK)
 		animator.animation = attack_anim
 		animator.play()
-		if hitbox_anim_player.has_animation(attack_anim + "_hitbox"):
-			hitbox_anim_player.play(attack_anim + "_hitbox")
+		if attack_anim == "stand_punch_1":
+			hitbox_anim_player.play("stand_punch_1_hitbox")
+		if attack_anim == "stand_punch_2":
+			hitbox_anim_player.play("stand_punch_2_hitbox")
+		if attack_anim == "stand_punch_3":
+			hitbox_anim_player.play("stand_punch_3_hitbox")	
+		if attack_anim == "stand_kick_1":
+			hitbox_anim_player.play("stand_kick_1_hitbox")
+		if attack_anim == "stand_kick_2":
+			hitbox_anim_player.play("stand_kick_2_hitbox")
 		await animator.animation_finished
 		if attack_anim == "hadouken":
 			fire_projectile()
@@ -183,12 +225,27 @@ func process_idle(delta: float) -> void:
 
 func process_walk(delta: float) -> void:
 	var direction = Input.get_axis(left_input, right_input)
+	
 	if abs(direction) > 0:
 		velocity.x = direction * SPEED
-		var anim_name = ("walk_backward" if direction > 0 else "walk_forward") if is_player2 else ("walk_forward" if direction > 0 else "walk_backward")
-		if animator.animation != anim_name:
-			animator.animation = anim_name
-			animator.play()
+		if is_player2:
+			if direction > 0:
+				if animator.animation != "walk_backward":
+					animator.animation = "walk_backward"
+					animator.play()
+			else:
+				if animator.animation != "walk_forward":
+					animator.animation = "walk_forward"
+					animator.play()
+		else:
+			if direction > 0:
+				if animator.animation != "walk_forward":
+					animator.animation = "walk_forward"
+					animator.play()
+			else:
+				if animator.animation != "walk_backward":
+					animator.animation = "walk_backward"
+					animator.play()
 	else:
 		set_state(State.IDLE)
 		animator.animation = "idle"
@@ -202,6 +259,7 @@ func process_walk(delta: float) -> void:
 		animator.animation = "jump"
 		animator.play()
 		return
+
 	if Input.is_action_pressed(crouch_input):
 		set_state(State.CROUCH)
 		animator.animation = "crouch"
@@ -214,8 +272,16 @@ func process_walk(delta: float) -> void:
 		set_state(State.ATTACK)
 		animator.animation = attack_anim
 		animator.play()
-		if hitbox_anim_player.has_animation(attack_anim + "_hitbox"):
-			hitbox_anim_player.play(attack_anim + "_hitbox")
+		if attack_anim == "stand_punch_1":
+			hitbox_anim_player.play("stand_punch_1_hitbox")
+		if attack_anim == "stand_punch_2":
+			hitbox_anim_player.play("stand_punch_2_hitbox")
+		if attack_anim == "stand_punch_3":
+			hitbox_anim_player.play("stand_punch_3_hitbox")	
+		if attack_anim == "stand_kick_1":
+			hitbox_anim_player.play("stand_kick_1_hitbox")
+		if attack_anim == "stand_kick_2":
+			hitbox_anim_player.play("stand_kick_2_hitbox")
 		await animator.animation_finished
 		set_state(State.IDLE)
 		animator.animation = "idle"
@@ -228,14 +294,23 @@ func process_crouch(delta: float) -> void:
 		animator.animation = "idle"
 		animator.play()
 		return
+
 	var attack_anim = get_attack_animation("crouch")
 	if attack_anim != "":
 		velocity.x = 0
 		set_state(State.ATTACK)
 		animator.animation = attack_anim
 		animator.play()
-		if hitbox_anim_player.has_animation(attack_anim + "_hitbox"):
-			hitbox_anim_player.play(attack_anim + "_hitbox")
+		if attack_anim == "crouch_kick_1":
+			hitbox_anim_player.play("crouch_kick_1_hitbox")
+		if attack_anim == "crouch_kick_2":
+			hitbox_anim_player.play("crouch_kick_2_hitbox")
+		if attack_anim == "crouch_punch_1":
+			hitbox_anim_player.play("crouch_punch_1_hitbox")
+		if attack_anim == "crouch_punch_2":
+			hitbox_anim_player.play("crouch_punch_2_hitbox")
+		if attack_anim == "crouch_punch_3":
+			hitbox_anim_player.play("crouch_punch_3_hitbox")
 		await animator.animation_finished
 		if Input.is_action_pressed(crouch_input):
 			set_state(State.CROUCH)
@@ -246,9 +321,11 @@ func process_crouch(delta: float) -> void:
 			animator.animation = "idle"
 			animator.play()
 		return
+
 	if animator.animation != "crouch":
 		animator.animation = "crouch"
 		animator.play()
+		
 	velocity.x = move_toward(velocity.x, 0, SPEED)
 
 func process_jump(delta: float) -> void:
@@ -258,8 +335,14 @@ func process_jump(delta: float) -> void:
 		set_state(State.ATTACK)
 		animator.animation = attack_anim
 		animator.play()
-		if hitbox_anim_player.has_animation(attack_anim + "_hitbox"):
-			hitbox_anim_player.play(attack_anim + "_hitbox")
+		if attack_anim == "jump_punch_1":
+			hitbox_anim_player.play("jump_punch_1_hitbox")
+		if attack_anim == "jump_punch_2":
+			hitbox_anim_player.play("jump_punch_2_hitbox")
+		if attack_anim == "jump_kick_1":
+			hitbox_anim_player.play("jump_kick_1_hitbox")
+		if attack_anim == "jump_kick_2":
+			hitbox_anim_player.play("jump_kick_2_hitbox")
 		await animator.animation_finished
 		if is_on_floor():
 			set_state(State.IDLE)
@@ -267,23 +350,36 @@ func process_jump(delta: float) -> void:
 			animator.play()
 		else:
 			set_state(State.JUMP)
-			var dir = Input.get_axis(left_input, right_input)
-			velocity.x = dir * SPEED
-			animator.animation = "jump_forward" if dir > 0 else "jump"
-			animator.play()
+			var direction = Input.get_axis(left_input, right_input)
+			if abs(direction) > 0:
+				velocity.x = direction * SPEED
+				if direction > 0:
+					animator.animation = "jump_forward"
+				else:
+					animator.animation = "jump"
+				animator.play()
+			else:
+				animator.animation = "jump"
+				animator.play()
 		return
+
 	if is_on_floor():
 		set_state(State.IDLE)
 		animator.animation = "idle"
 		animator.play()
 		return
-	var dir = Input.get_axis(left_input, right_input)
-	if abs(dir) > 0:
-		velocity.x = dir * SPEED
-		var anim_name = "jump_forward" if dir > 0 else "jump"
-		if animator.animation != anim_name:
-			animator.animation = anim_name
-			animator.play()
+
+	var direction = Input.get_axis(left_input, right_input)
+	if abs(direction) > 0:
+		velocity.x = direction * SPEED
+		if direction > 0:
+			if animator.animation != "jump_forward":
+				animator.animation = "jump_forward"
+				animator.play()
+		else:
+			if animator.animation != "jump":
+				animator.animation = "jump"
+				animator.play()
 	else:
 		if animator.animation != "jump":
 			animator.animation = "jump"
@@ -291,8 +387,14 @@ func process_jump(delta: float) -> void:
 
 func process_hurt(delta: float) -> void:
 	if not hurt_applied:
-		var block_pressed = Input.is_action_pressed("walk_right_p2" if is_player2 else "walk_left")
+		var block_pressed = false
+		if is_player2:
+			block_pressed = Input.is_action_pressed("walk_right_p2")
+		else:
+			block_pressed = Input.is_action_pressed("walk_left")
+		
 		if block_pressed:
+			print("Block input detected. Playing stand_block animation and ignoring damage.")
 			animator.animation = "stand_block"
 			animator.play()
 			await animator.animation_finished
@@ -300,14 +402,23 @@ func process_hurt(delta: float) -> void:
 			animator.animation = "idle"
 			animator.play()
 			return
+		
+		print("Taking damage: current_health before =", current_health)
 		current_health -= 10
+		print("Taking damage: current_health after =", current_health)
 		emit_signal("HPLoss")
 		hurt_applied = true
+		
 		if current_health <= 0:
 			animator.animation = "jump_hit"
 			animator.play()
 			await get_tree().create_timer(0.1).timeout
+			var frame_count = animator.sprite_frames.get_frame_count("jump_hit")
 			animator.stop()
+			if get_parent() and get_parent().name == "Player2":
+				print("player1 won")
+			else:
+				print("player2 won")
 			await get_tree().create_timer(3.0).timeout
 			get_tree().reload_current_scene()
 			return
@@ -329,6 +440,7 @@ func hurt() -> void:
 func _on_Hurtbox_area_entered(area: Area2D) -> void:
 	if is_blocking:
 		return
+	print("Hurtbox entered by:", area.name)
 	if area.get_parent() == self:
 		return
 	if area.is_in_group("attack_hitboxes"):
@@ -336,27 +448,37 @@ func _on_Hurtbox_area_entered(area: Area2D) -> void:
 
 func _on_animation_finished() -> void:
 	if animator.animation == "crouch" and current_state == State.CROUCH:
-		var frame_count = animator.sprite_frames.get_frame_count("crouch")
-		animator.frame = frame_count - 1
-		animator.stop()
-
+		if Input.is_action_pressed(crouch_input):
+			var frame_count = animator.sprite_frames.get_frame_count("crouch")
+			animator.frame = frame_count - 1
+			animator.stop()
+			
 func get_attack_animation(context: String) -> String:
 	if context == "stand" and Input.is_action_just_pressed(punch_1_input) and Input.is_action_just_pressed(punch_2_input):
 		return "hadouken"
-	if Input.is_action_just_pressed(punch_1_input): return context + "_punch_1"
-	if Input.is_action_just_pressed(punch_2_input): return context + "_punch_2"
-	if Input.is_action_just_pressed(punch_3_input): return context + "_punch_3"
-	if Input.is_action_just_pressed(kick_1_input): return context + "_kick_1"
-	if Input.is_action_just_pressed(kick_2_input): return context + "_kick_2"
+	if Input.is_action_just_pressed(punch_1_input):
+		return context + "_punch_1"
+	elif Input.is_action_just_pressed(punch_2_input):
+		return context + "_punch_2"
+	elif Input.is_action_just_pressed(punch_3_input):
+		return context + "_punch_3"
+	elif Input.is_action_just_pressed(kick_1_input):
+		return context + "_kick_1"
+	elif Input.is_action_just_pressed(kick_2_input):
+		return context + "_kick_2"
 	return ""
 
 func _flip_based_on_opponent() -> void:
 	var parent_node = get_parent()
-	if not parent_node: return
-	var other_body: CharacterBody2D = null
+	if parent_node == null:
+		return
+
+	var other_player_body: CharacterBody2D = null
 	if parent_node.name == "Player1":
-		var root = parent_node.get_parent()
-		if root.has_node("Player2/CharacterBody2D"):
-			other_body = root.get_node("Player2/CharacterBody2D")
-	if other_body:
-		animator.flip_h = global_position.x > other_body.global_position.x
+		if parent_node.get_parent().has_node("Player2/CharacterBody2D"):
+			other_player_body = parent_node.get_parent().get_node("Player2/CharacterBody2D")
+	elif parent_node.name == "Player2":
+		return
+
+	if other_player_body:
+		animator.flip_h = (global_position.x > other_player_body.global_position.x)

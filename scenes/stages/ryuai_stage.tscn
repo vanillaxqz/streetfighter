@@ -61,6 +61,8 @@ scale = Vector2(2.075, 2.075)
 [node name="HUD" parent="." instance=ExtResource("4_fr8pe")]
 position = Vector2(555, 20)
 scale = Vector2(2, 1.25)
+player_path = NodePath("../Player1/ryu")
+player_path_p2 = NodePath("../Player2/ryuAI")
 
 [node name="PauseMenu" parent="." instance=ExtResource("5_iwgrw")]
 anchors_preset = 8

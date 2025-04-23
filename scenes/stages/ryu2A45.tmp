@@ -1,10 +1,11 @@
-[gd_scene load_steps=8 format=3 uid="uid://j1hunvdgktd"]
+[gd_scene load_steps=9 format=3 uid="uid://but8det0qthk1"]
 
-[ext_resource type="PackedScene" uid="uid://ljc4hmyxkhsv" path="res://scenes/hud/HUD.tscn" id="1_snkr2"]
-[ext_resource type="Texture2D" uid="uid://d0yax8agb87hl" path="res://assets/stages/ryu_stage.png" id="1_um7dn"]
-[ext_resource type="PackedScene" uid="uid://c3f2njurxool5" path="res://scenes/characters/ryu.tscn" id="2_yd40u"]
-[ext_resource type="AudioStream" uid="uid://m5yt5kfskgsj" path="res://assets/audio/stage_enter.mp3" id="4_81v6a"]
-[ext_resource type="PackedScene" uid="uid://dswu71a74kiet" path="res://scenes/pause_menu.tscn" id="5_nrcom"]
+[ext_resource type="Texture2D" uid="uid://d0yax8agb87hl" path="res://assets/stages/ryu_stage.png" id="1_yv41o"]
+[ext_resource type="AudioStream" uid="uid://m5yt5kfskgsj" path="res://assets/audio/stage_enter.mp3" id="2_bkxw4"]
+[ext_resource type="PackedScene" uid="uid://c3f2njurxool5" path="res://scenes/characters/ryu.tscn" id="3_8gwm1"]
+[ext_resource type="PackedScene" uid="uid://ljc4hmyxkhsv" path="res://scenes/hud/HUD.tscn" id="4_fr8pe"]
+[ext_resource type="PackedScene" uid="uid://fbmoxtfog8mt" path="res://scenes/characters/ryuAI.tscn" id="4_jo3yx"]
+[ext_resource type="PackedScene" uid="uid://dswu71a74kiet" path="res://scenes/pause_menu.tscn" id="5_iwgrw"]
 
 [sub_resource type="SegmentShape2D" id="SegmentShape2D_bniej"]
 b = Vector2(1, 648)
@@ -20,7 +21,7 @@ metadata/_edit_horizontal_guides_ = [328.0]
 [node name="BG" type="Sprite2D" parent="."]
 position = Vector2(589.667, 454.625)
 scale = Vector2(1.75521, 2.69271)
-texture = ExtResource("1_um7dn")
+texture = ExtResource("1_yv41o")
 
 [node name="Left Wall" type="StaticBody2D" parent="."]
 
@@ -40,30 +41,28 @@ position = Vector2(586, 565)
 shape = SubResource("SegmentShape2D_phojj")
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
-stream = ExtResource("4_81v6a")
+stream = ExtResource("2_bkxw4")
 volume_db = -19.832
 autoplay = true
 
 [node name="Player1" type="Node2D" parent="."]
 
-[node name="ryu" parent="Player1" instance=ExtResource("2_yd40u")]
+[node name="ryu" parent="Player1" instance=ExtResource("3_8gwm1")]
 position = Vector2(440, 413)
 scale = Vector2(2.075, 2.075)
 
 [node name="Player2" type="Node2D" parent="."]
 position = Vector2(283.025, 0)
 
-[node name="ryu2" parent="Player2" instance=ExtResource("2_yd40u")]
-position = Vector2(453.975, 411)
+[node name="ryuAI" parent="Player2" instance=ExtResource("4_jo3yx")]
+position = Vector2(464.975, 412)
 scale = Vector2(2.075, 2.075)
 
-[node name="HUD" parent="." instance=ExtResource("1_snkr2")]
+[node name="HUD" parent="." instance=ExtResource("4_fr8pe")]
 position = Vector2(555, 20)
 scale = Vector2(2, 1.25)
-player_path = NodePath("../Player1/ryu")
-player_path_p2 = NodePath("../Player2/ryu2")
 
-[node name="PauseMenu" parent="." instance=ExtResource("5_nrcom")]
+[node name="PauseMenu" parent="." instance=ExtResource("5_iwgrw")]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5

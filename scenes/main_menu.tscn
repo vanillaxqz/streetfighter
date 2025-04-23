@@ -1,0 +1,117 @@
+[gd_scene load_steps=9 format=3 uid="uid://cgpla6nssiqba"]
+
+[ext_resource type="Script" path="res://scenes/main_menu.gd" id="1_1piav"]
+[ext_resource type="Texture2D" uid="uid://b3cy54c3r72ol" path="res://assets/start_screen/xzqKhV.jpg" id="1_8x5ms"]
+[ext_resource type="FontFile" uid="uid://bxubldux70y37" path="res://PixeloidSans.ttf" id="3_ootbv"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_5v42j"]
+texture = ExtResource("1_8x5ms")
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_4in0r"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_skqem"]
+bg_color = Color(0.707967, 0.707967, 0.707967, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_size = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1042w"]
+bg_color = Color(0.458405, 0.458405, 0.458405, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_size = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2gcq0"]
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_size = 5
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_1piav")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_5v42j")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -177.0
+offset_top = -28.0
+offset_right = 176.0
+offset_bottom = 245.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="Button" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("3_ootbv")
+theme_override_font_sizes/font_size = 30
+theme_override_styles/focus = SubResource("StyleBoxEmpty_4in0r")
+theme_override_styles/hover = SubResource("StyleBoxFlat_skqem")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_1042w")
+theme_override_styles/normal = SubResource("StyleBoxFlat_2gcq0")
+text = "Player vs Player"
+
+[node name="Button2" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("3_ootbv")
+theme_override_font_sizes/font_size = 30
+theme_override_styles/focus = SubResource("StyleBoxEmpty_4in0r")
+theme_override_styles/hover = SubResource("StyleBoxFlat_skqem")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_1042w")
+theme_override_styles/normal = SubResource("StyleBoxFlat_2gcq0")
+text = "Player vs AI"
+
+[node name="Button3" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("3_ootbv")
+theme_override_font_sizes/font_size = 30
+theme_override_styles/focus = SubResource("StyleBoxEmpty_4in0r")
+theme_override_styles/hover = SubResource("StyleBoxFlat_skqem")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_1042w")
+theme_override_styles/normal = SubResource("StyleBoxFlat_2gcq0")
+text = "Exit
+"
+
+[connection signal="pressed" from="VBoxContainer/Button" to="." method="_on_playervsplayer_pressed"]
+[connection signal="pressed" from="VBoxContainer/Button2" to="." method="_on_playervsai_pressed"]
+[connection signal="pressed" from="VBoxContainer/Button3" to="." method="_on_exit_pressed"]
